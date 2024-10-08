@@ -1,8 +1,6 @@
 package udp;
 
 import dns.DNSMessage;
-import dns.header.Header;
-import dns.header.HeaderFlags;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -25,11 +23,10 @@ public class DNSServerSocket {
                 final DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 socket.receive(packet);
 
-                DNSMessage response = new DNSMessage();
-                Header header = response.getHeader();
-                header.setID((short) ID);
-                HeaderFlags flags = header.getFlags();
-                flags.setQueryResponse(true);
+                DNSMessage response = new DNSMessage.Builder()
+                        .setID((short) ID)
+                        .setQueryResponse(true)
+                        .build();
                 final byte[] bufResponse = response.getMessage();
                 final DatagramPacket packetResponse = new DatagramPacket(bufResponse, bufResponse.length, packet.getSocketAddress());
                 socket.send(packetResponse);
