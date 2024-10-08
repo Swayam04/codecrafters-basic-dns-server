@@ -1,22 +1,30 @@
 package dns;
 
 import dns.header.DNSHeader;
+import dns.header.DNSQuestion;
 import dns.header.OPCode;
 import dns.header.RCode;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DNSMessage {
 
     private final byte[] message = new byte[512];
     private final DNSHeader header;
+    private final List<DNSQuestion> questions;
 
     private DNSMessage(Builder builder) {
+        questions = builder.questions;
         this.header = builder.header;
     }
 
     public static class Builder {
         private final DNSHeader header;
+        private final List<DNSQuestion> questions;
 
         public Builder() {
+            questions = new ArrayList<>();
             this.header = new DNSHeader();
         }
 
@@ -75,6 +83,11 @@ public class DNSMessage {
             return this;
         }
 
+        public Builder addQuestion(DNSQuestion question) {
+            this.questions.add(question);
+            return this;
+        }
+
         public DNSMessage build() {
             return new DNSMessage(this);
         }
@@ -82,7 +95,14 @@ public class DNSMessage {
 
     public byte[] getMessage() {
         byte[] dnsHeader = header.buildDnsHeader();
-        System.arraycopy(dnsHeader, 0, message, 0, dnsHeader.length);
+        int currentPos = 0;
+        System.arraycopy(dnsHeader, 0, message, currentPos, dnsHeader.length);
+        currentPos += dnsHeader.length;
+        for (DNSQuestion question : questions) {
+            byte[] dnsQuestion = question.buildDNSQuestion();
+            System.arraycopy(dnsQuestion, 0, message, currentPos, dnsQuestion.length);
+            currentPos += dnsQuestion.length;
+        }
         return message;
     }
 
@@ -132,6 +152,10 @@ public class DNSMessage {
 
     public RCode getRCode() {
         return header.getRCode();
+    }
+
+    public List<DNSQuestion> getQuestions() {
+        return questions;
     }
 }
 
