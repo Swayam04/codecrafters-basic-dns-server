@@ -1,7 +1,6 @@
 package dns;
 
 import dns.header.DNSHeader;
-import dns.header.DNSQuestion;
 import dns.header.OPCode;
 import dns.header.RCode;
 
@@ -13,18 +12,22 @@ public class DNSMessage {
     private final byte[] message = new byte[512];
     private final DNSHeader header;
     private final List<DNSQuestion> questions;
+    private final List<DNSRecord> answers;
 
     private DNSMessage(Builder builder) {
         questions = builder.questions;
+        answers = builder.answers;
         this.header = builder.header;
     }
 
     public static class Builder {
         private final DNSHeader header;
         private final List<DNSQuestion> questions;
+        private final List<DNSRecord> answers;
 
         public Builder() {
             questions = new ArrayList<>();
+            answers = new ArrayList<>();
             this.header = new DNSHeader();
         }
 
@@ -88,6 +91,11 @@ public class DNSMessage {
             return this;
         }
 
+        public Builder addAnswerRecord(DNSRecord record) {
+            this.answers.add(record);
+            return this;
+        }
+
         public DNSMessage build() {
             return new DNSMessage(this);
         }
@@ -102,6 +110,11 @@ public class DNSMessage {
             byte[] dnsQuestion = question.buildDNSQuestion();
             System.arraycopy(dnsQuestion, 0, message, currentPos, dnsQuestion.length);
             currentPos += dnsQuestion.length;
+        }
+        for (DNSRecord record : answers) {
+            byte[] dnsRecord = record.buildDNSRecord();
+            System.arraycopy(dnsRecord, 0, message, currentPos, dnsRecord.length);
+            currentPos += dnsRecord.length;
         }
         return message;
     }
@@ -156,6 +169,10 @@ public class DNSMessage {
 
     public List<DNSQuestion> getQuestions() {
         return questions;
+    }
+
+    public List<DNSRecord> getAnswers() {
+        return answers;
     }
 }
 

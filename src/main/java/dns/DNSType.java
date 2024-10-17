@@ -1,4 +1,4 @@
-package dns.header;
+package dns;
 
 public enum DNSType {
     A(1),

@@ -1,9 +1,6 @@
 package udp;
 
-import dns.DNSMessage;
-import dns.header.DNSClass;
-import dns.header.DNSQuestion;
-import dns.header.DNSType;
+import dns.*;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -31,6 +28,8 @@ public class DNSServerSocket {
                         .setQueryResponse(true)
                         .setQuestionCount((short) 1)
                         .addQuestion(new DNSQuestion("codecrafters.io", DNSType.A, DNSClass.IN))
+                        .setAnswerCount((short) 1)
+                        .addAnswerRecord(new DNSRecord("codecrafters.io", DNSType.A, DNSClass.IN, 60, (short) 4, "8.8.8.8"))
                         .build();
                 final byte[] bufResponse = response.getMessage();
                 final DatagramPacket packetResponse = new DatagramPacket(bufResponse, bufResponse.length, packet.getSocketAddress());
