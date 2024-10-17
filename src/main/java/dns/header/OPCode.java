@@ -3,7 +3,11 @@ package dns.header;
 public enum OPCode {
     STANDARD_QUERY(0),
     INVERSE_QUERY(1),
-    STATUS(2);
+    STATUS(2),
+    UNASSIGNED(3),
+    NOTIFY(4),
+    UPDATE(5),
+    DSO(6);
 
     private final int value;
 
