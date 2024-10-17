@@ -16,4 +16,13 @@ public enum RCode {
     public int getValue() {
         return value;
     }
+
+    public static RCode fromValue(int value) {
+        for (RCode rCode : RCode.values()) {
+            if (rCode.getValue() == value) {
+                return rCode;
+            }
+        }
+        return NO_ERROR;
+    }
 }

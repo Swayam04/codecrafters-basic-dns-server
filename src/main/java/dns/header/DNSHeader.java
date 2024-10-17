@@ -4,33 +4,19 @@ import java.nio.ByteBuffer;
 
 public class DNSHeader {
 
-    private short ID;
-    private OPCode opCode;
-    private RCode rCode;
-    private boolean QR;
-    private boolean AA;
-    private boolean TC;
-    private boolean RD;
-    private boolean RA;
-    private short QDCOUNT;
-    private short ANCOUNT;
-    private short NSCOUNT;
-    private short ARCOUNT;
+    private short ID = 0;
+    private OPCode opCode = OPCode.STANDARD_QUERY;
+    private RCode rCode = RCode.NO_ERROR;
+    private boolean QR = false;
+    private boolean AA = false;
+    private boolean TC = false;
+    private boolean RD = false;
+    private boolean RA = false;
+    private short questionCount = 0;
+    private short answerCount = 0;
+    private short authorityCount = 0;
+    private short additionalCount = 0;
 
-    public DNSHeader() {
-        this.ID = 0;
-        this.opCode = OPCode.STANDARD_QUERY;
-        this.rCode = RCode.NO_ERROR;
-        this.QR = false;
-        this.AA = false;
-        this.TC = false;
-        this.RD = false;
-        this.RA = false;
-        this.QDCOUNT = 0;
-        this.ANCOUNT = 0;
-        this.NSCOUNT = 0;
-        this.ARCOUNT = 0;
-    }
 
     public short getID() {
         return ID;
@@ -41,35 +27,35 @@ public class DNSHeader {
     }
 
     public short getQuestionCount() {
-        return QDCOUNT;
+        return questionCount;
     }
 
     public void setQuestionCount(short QDCOUNT) {
-        this.QDCOUNT = QDCOUNT;
+        this.questionCount = QDCOUNT;
     }
 
     public short getAnswerCount() {
-        return ANCOUNT;
+        return answerCount;
     }
 
     public void setAnswerCount(short ANCOUNT) {
-        this.ANCOUNT = ANCOUNT;
+        this.answerCount = ANCOUNT;
     }
 
     public short getNameServerCount() {
-        return NSCOUNT;
+        return authorityCount;
     }
 
     public void setNameServerCount(short NSCOUNT) {
-        this.NSCOUNT = NSCOUNT;
+        this.authorityCount = NSCOUNT;
     }
 
     public short getAdditionalRecordCount() {
-        return ARCOUNT;
+        return additionalCount;
     }
 
     public void setAdditionalRecordCount(short ARCOUNT) {
-        this.ARCOUNT = ARCOUNT;
+        this.additionalCount = ARCOUNT;
     }
 
     public boolean isQR() {
@@ -132,10 +118,10 @@ public class DNSHeader {
         ByteBuffer buffer = ByteBuffer.allocate(12);
         buffer.putShort(ID);
         buffer.putShort(getFlags());
-        buffer.putShort(QDCOUNT);
-        buffer.putShort(ANCOUNT);
-        buffer.putShort(NSCOUNT);
-        buffer.putShort(ARCOUNT);
+        buffer.putShort(questionCount);
+        buffer.putShort(answerCount);
+        buffer.putShort(authorityCount);
+        buffer.putShort(additionalCount);
         return buffer.array();
     }
 

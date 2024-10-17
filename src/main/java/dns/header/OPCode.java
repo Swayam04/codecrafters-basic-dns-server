@@ -14,4 +14,13 @@ public enum OPCode {
     public int getValue() {
         return value;
     }
+
+    public static OPCode fromValue(int value) {
+        for (OPCode opCode : OPCode.values()) {
+            if (opCode.getValue() == value) {
+                return opCode;
+            }
+        }
+        return STANDARD_QUERY;
+    }
 }
