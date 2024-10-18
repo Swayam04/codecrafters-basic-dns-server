@@ -60,15 +60,23 @@ public class DNSServerSocket {
     }
 
     private void getQuestionsAndAnswers(DNSMessage request, DNSMessage response) {
-        int count = 0;
+        short originalId = request.getHeader().getID();
+
         for(DNSQuestion question : request.getQuestions()) {
-            System.out.println(question.getDomainName());
             response.addQuestion(question);
+
             if(forwardingAddress != null && !forwardingAddress.isEmpty()) {
-                response.addAnswer(forwardRequestAndGetResponse(question, (short) (request.getHeader().getID() + count)));
-                count++;
+                DNSRecord answer = forwardRequestAndGetResponse(question, originalId);
+                response.addAnswer(answer);
             } else {
-                response.addAnswer(new DNSRecord(question.getDomainName(), DNSType.A, DNSClass.IN, 256, 4, "8.8.8.8"));
+                response.addAnswer(new DNSRecord(
+                        question.getDomainName(),
+                        DNSType.A,
+                        DNSClass.IN,
+                        256,
+                        4,
+                        "8.8.8.8"
+                ));
             }
         }
     }
@@ -90,21 +98,34 @@ public class DNSServerSocket {
         int port = Integer.parseInt(addressParts[1]);
 
         try (DatagramSocket socket = new DatagramSocket()) {
+            socket.setSoTimeout(5000);
             InetAddress address = InetAddress.getByName(host);
-            DatagramPacket requestPacket = new DatagramPacket(request, request.length, address, port);
+            DatagramPacket requestPacket = new DatagramPacket(
+                    request,
+                    request.length,
+                    address,
+                    port
+            );
             socket.send(requestPacket);
 
             byte[] responseBuffer = new byte[512];
-            DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length);
+            DatagramPacket responsePacket = new DatagramPacket(
+                    responseBuffer,
+                    responseBuffer.length
+            );
             socket.receive(responsePacket);
+
             DNSMessageParser parser = new DNSMessageParser(responseBuffer);
             DNSMessage response = parser.parseMessage();
 
-//            if(response.getHeader().getAnswerCount() != 1) {
-//                throw new Exception("Incorrect answer count" + response.getHeader().getAnswerCount());
-//            }
-            System.out.println(question.getDomainName() + " " + response.getAnswers().getFirst().getRData());
-            return response.getAnswers().getFirst();
+            if (response.getHeader().getID() != id) {
+                System.out.println("Warning: Response ID mismatch");
+                return null;
+            }
+
+            if (!response.getAnswers().isEmpty()) {
+                return response.getAnswers().getFirst();
+            }
         } catch (Exception e) {
             System.out.println("Failed to send request: " + e.getMessage());
         }

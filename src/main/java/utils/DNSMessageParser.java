@@ -81,35 +81,36 @@ public class DNSMessageParser {
     private String parseDomainName() {
         StringBuilder domainName = new StringBuilder();
         int position = byteBuffer.position();
-        boolean isPointer = false;
+        boolean isFirstLabel = true;
+
         while (true) {
             int length = byteBuffer.get() & 0xFF;
             if ((length & 0xC0) == 0xC0) {
                 int pointerOffset = ((length & 0x3F) << 8) | (byteBuffer.get() & 0xFF);
-                System.out.println(pointerOffset);
                 String cachedDomain = domainNameCache.get(pointerOffset);
                 if (cachedDomain != null) {
-                    domainName.append(".");
+                    if (!isFirstLabel) {
+                        domainName.append(".");
+                    }
                     domainName.append(cachedDomain);
                 }
-                isPointer = true;
                 break;
             } else if (length == 0) {
                 break;
             } else {
                 byte[] labelBytes = new byte[length];
                 byteBuffer.get(labelBytes);
-
-                if (!domainName.isEmpty()) {
+                if (!isFirstLabel) {
                     domainName.append(".");
                 }
                 domainName.append(new String(labelBytes, StandardCharsets.UTF_8));
+                isFirstLabel = false;
             }
         }
-        if (!isPointer) {
+        if (!domainName.isEmpty()) {
             domainNameCache.putIfAbsent(position, domainName.toString());
-            System.out.println(domainNameCache);
         }
+
         return domainName.toString();
     }
 
