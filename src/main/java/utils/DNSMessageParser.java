@@ -91,6 +91,7 @@ public class DNSMessageParser {
                     domainName.append(".");
                     domainName.append(cachedDomain);
                 }
+                System.out.println(domainName);
                 isPointer = true;
                 break;
             } else if (length == 0) {
@@ -103,6 +104,7 @@ public class DNSMessageParser {
                     domainName.append(".");
                 }
                 domainName.append(new String(labelBytes, StandardCharsets.UTF_8));
+                System.out.println(domainName);
             }
         }
         if (!isPointer) {
