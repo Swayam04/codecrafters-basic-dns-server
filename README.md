@@ -1,36 +1,45 @@
-[![progress-banner](https://backend.codecrafters.io/progress/dns-server/c436ce66-fa2d-4854-8733-7f72e742c590)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+# Basic Forwarding DNS Server
+This project implements a basic forwarding DNS server, built as part of a step-by-step, unguided and TDD based [Codecrafters](https://app.codecrafters.io/catalog) challenge.
 
-This is a starting point for Java solutions to the
-["Build Your Own DNS server" Challenge](https://app.codecrafters.io/courses/dns-server/overview).
+## Core Features
+* **DNS Packet Processing**: Receives and responds to DNS query packets
+* **Header Parsing**: Processes DNS headers with complete flag support
+* **Question Section**: Handles DNS questions with proper domain name parsing
+* **Answer Processing**: Processes response records from upstream resolvers
+* **Name Compression**: Supports DNS message compression according to RFC 1035
+* **Forwarding Resolution**: Acts as a forwarding resolver by querying upstream DNS servers
+* **IPv4 Support**: Complete support for A record resolution
 
-In this challenge, you'll build a DNS server that's capable of parsing and
-creating DNS packets, responding to DNS queries, handling various record types
-and doing recursive resolve. Along the way we'll learn about the DNS protocol,
-DNS packet format, root servers, authoritative servers, forwarding servers,
-various record types (A, AAAA, CNAME, etc) and more.
+## Understanding DNS Resolution
+DNS (Domain Name System) acts as the internet's phone book, translating human-readable domain names into IP addresses. This implementation follows the standard DNS protocol:
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+### Packet Structure
+* **Header**: Contains flags and section counts
+* **Question**: The domain name being queried
+* **Answer**: Resource records responding to the query
+* **Authority**: Details about authoritative nameservers
+* **Additional**: Extra information like related records
 
-# Passing the first stage
+### Name Compression
+DNS uses a special compression scheme where repeated domain names are replaced with pointers to reduce packet size. The server implements this compression scheme according to RFC 1035 specifications.
 
-The entry point for your `your_program.sh` implementation is in
-`src/main/java/Main.java`. Study and uncomment the relevant code, and push your
-changes to pass the first stage:
+### Resolution Process
+1. Client sends query to this forwarding server
+2. Server parses and validates the request
+3. Query is forwarded to a recursive resolver
+4. Response is received, parsed, and returned to client
 
-```sh
-git commit -am "pass 1st stage" # any msg
-git push origin master
-```
+## Future Enhancements
+Planned improvements include:
+* **Recursive Resolution**: Converting to a full recursive resolver
+* **Extended Record Support**: Adding support for IPv6 (AAAA) and other common record types (MX, CNAME, etc.)
+* **Caching Layer**: Implementing response caching with proper TTL handling
+* **Security Features**:
+   * DNS over HTTPS support
+   * DDOS protection mechanisms
+   * Rate limiting
+* **DNSSec**: Adding DNSSEC validation and signing capabilities
+* **Performance Optimizations**: Connection pooling and request batching
 
-Time to move on to the next stage!
-
-# Stage 2 & beyond
-
-Note: This section is for stages 2 and beyond.
-
-1. Ensure you have `java (21)` installed locally
-1. Run `./your_program.sh` to run your program, which is implemented in
-   `src/main/java/Main.java`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+## Acknowledgments
+This project was built as part of the Codecrafters challenge, with all implementation done independently.
