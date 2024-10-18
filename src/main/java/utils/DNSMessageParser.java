@@ -79,7 +79,6 @@ public class DNSMessageParser {
     }
 
     private String parseDomainName(int position) {
-        System.out.println("Starting domain parse at position: " + byteBuffer.position());
         StringBuilder domainName = new StringBuilder();
         boolean isFirstLabel = true;
 
@@ -87,7 +86,6 @@ public class DNSMessageParser {
 
         while (true) {
             int length = byteBuffer.get() & 0xFF;
-            System.out.println("Label length: " + length + " at position: " + (byteBuffer.position() - 1));
             if ((length & 0xC0) == 0xC0) {
                 int pointerOffset = ((length & 0x3F) << 8) | (byteBuffer.get() & 0xFF);
                 int currentPosition = byteBuffer.position();
@@ -103,7 +101,6 @@ public class DNSMessageParser {
             } else {
                 byte[] labelBytes = new byte[length];
                 byteBuffer.get(labelBytes);
-                System.out.println("Label: " + new String(labelBytes, StandardCharsets.UTF_8));
                 if (!isFirstLabel) {
                     domainName.append(".");
                 }
