@@ -118,11 +118,6 @@ public class DNSServerSocket {
             DNSMessageParser parser = new DNSMessageParser(responseBuffer);
             DNSMessage response = parser.parseMessage();
 
-            if (response.getHeader().getID() != id) {
-                System.out.println("Warning: Response ID mismatch");
-                return null;
-            }
-
             if (!response.getAnswers().isEmpty()) {
                 return response.getAnswers().getFirst();
             }

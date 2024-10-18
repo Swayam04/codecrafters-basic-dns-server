@@ -14,13 +14,9 @@ import java.util.Set;
 
 public class DNSMessageParser {
     private final ByteBuffer byteBuffer;
-    private final Map<Integer, String> domainNameCache;
-    private final Set<String> nameBackup;
 
     public DNSMessageParser(byte[] data) {
         this.byteBuffer = ByteBuffer.wrap(data);
-        this.domainNameCache = new HashMap<>();
-        this.nameBackup = new HashSet<>();
     }
 
     public DNSMessage parseMessage() {
@@ -64,7 +60,7 @@ public class DNSMessageParser {
     }
 
     private DNSQuestion parseQuestion() {
-        String domainName = parseDomainName();
+        String domainName = parseDomainName(byteBuffer.position());
         DNSClass dnsClass = DNSClass.fromValue(byteBuffer.getShort());
         DNSType dnsType = DNSType.fromValue(byteBuffer.getShort());
         return new DNSQuestion(domainName, dnsType, dnsClass);
@@ -72,7 +68,7 @@ public class DNSMessageParser {
 
 
     private DNSRecord parseRecord() {
-        String domainName = parseDomainName();
+        String domainName = parseDomainName(byteBuffer.position());
         DNSClass dnsClass = DNSClass.fromValue(byteBuffer.getShort());
         DNSType dnsType = DNSType.fromValue(byteBuffer.getShort());
         long timeToLive = byteBuffer.getInt() & 0xFFFFFFFFL;
@@ -82,28 +78,25 @@ public class DNSMessageParser {
         return new DNSRecord(domainName, dnsType, dnsClass, timeToLive, rdLength, rData);
     }
 
-    private String parseDomainName() {
+    private String parseDomainName(int position) {
         System.out.println("Starting domain parse at position: " + byteBuffer.position());
         StringBuilder domainName = new StringBuilder();
-        int position = byteBuffer.position();
         boolean isFirstLabel = true;
+
+        byteBuffer.position(position);
 
         while (true) {
             int length = byteBuffer.get() & 0xFF;
-            System.out.println("Label length: " + length + " at position: " + (byteBuffer.position()-1));
+            System.out.println("Label length: " + length + " at position: " + (byteBuffer.position() - 1));
             if ((length & 0xC0) == 0xC0) {
                 int pointerOffset = ((length & 0x3F) << 8) | (byteBuffer.get() & 0xFF);
-                System.out.println("Found pointer to: " + pointerOffset);
-                System.out.println("Looking up cache for pointer at position: " + pointerOffset);
-                String cachedDomain = domainNameCache.get(pointerOffset);
-                System.out.println("Cached domain for pointer: " + cachedDomain);
-                if (cachedDomain != null) {
-                    System.out.println("Appending cached domain: " + cachedDomain + " to " + domainName);
-                    if (!isFirstLabel) {
-                        domainName.append(".");
-                    }
-                    domainName.append(cachedDomain);
+                int currentPosition = byteBuffer.position();
+                String pointedDomain = parseDomainName(pointerOffset);
+                byteBuffer.position(currentPosition);
+                if (!isFirstLabel) {
+                    domainName.append(".");
                 }
+                domainName.append(pointedDomain);
                 break;
             } else if (length == 0) {
                 break;
@@ -118,12 +111,6 @@ public class DNSMessageParser {
                 isFirstLabel = false;
             }
         }
-        if (!nameBackup.contains(domainName.toString())) {
-            nameBackup.add(domainName.toString());
-            System.out.println("position when adding to cache: " + position + " " + "domain name: " + domainName);
-            domainNameCache.putIfAbsent(position, domainName.toString());
-        }
-        System.out.println("Final domain: " + domainName.toString());
         return domainName.toString();
     }
 
