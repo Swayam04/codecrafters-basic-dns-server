@@ -94,8 +94,11 @@ public class DNSMessageParser {
             if ((length & 0xC0) == 0xC0) {
                 int pointerOffset = ((length & 0x3F) << 8) | (byteBuffer.get() & 0xFF);
                 System.out.println("Found pointer to: " + pointerOffset);
+                System.out.println("Looking up cache for pointer at position: " + pointerOffset);
                 String cachedDomain = domainNameCache.get(pointerOffset);
+                System.out.println("Cached domain for pointer: " + cachedDomain);
                 if (cachedDomain != null) {
+                    System.out.println("Appending cached domain: " + cachedDomain + " to " + domainName);
                     if (!isFirstLabel) {
                         domainName.append(".");
                     }
@@ -117,6 +120,7 @@ public class DNSMessageParser {
         }
         if (!nameBackup.contains(domainName.toString())) {
             nameBackup.add(domainName.toString());
+            System.out.println("Cached domain at position 16: " + domainNameCache.get(16));
             domainNameCache.putIfAbsent(position, domainName.toString());
         }
         System.out.println("Final domain: " + domainName.toString());
