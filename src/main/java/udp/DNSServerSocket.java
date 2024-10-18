@@ -62,6 +62,7 @@ public class DNSServerSocket {
     private void getQuestionsAndAnswers(DNSMessage request, DNSMessage response) {
         int count = 0;
         for(DNSQuestion question : request.getQuestions()) {
+            System.out.println(question.getDomainName());
             response.addQuestion(question);
             if(forwardingAddress != null && !forwardingAddress.isEmpty()) {
                 response.addAnswer(forwardRequestAndGetResponse(question, (short) (request.getHeader().getID() + count)));
