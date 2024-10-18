@@ -88,6 +88,7 @@ public class DNSMessageParser {
                 int pointerOffset = ((length & 0x3F) << 8) | (byteBuffer.get() & 0xFF);
                 String cachedDomain = domainNameCache.get(pointerOffset);
                 if (cachedDomain != null) {
+                    domainName.append(".");
                     domainName.append(cachedDomain);
                 }
                 isPointer = true;
@@ -105,7 +106,7 @@ public class DNSMessageParser {
             }
         }
         if (!isPointer) {
-            domainNameCache.put(position, domainName.toString());
+            domainNameCache.putIfAbsent(position, domainName.toString());
         }
         return domainName.toString();
     }
