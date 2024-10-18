@@ -100,9 +100,9 @@ public class DNSServerSocket {
             DNSMessage response = parser.parseMessage();
 
             if(response.getHeader().getAnswerCount() != 1) {
-                throw new Exception("Incorrect answer count");
+                throw new Exception("Incorrect answer count" + response.getHeader().getAnswerCount());
             }
-
+            System.out.println(question.getDomainName() + " " + response.getAnswers().getFirst().getRData());
             return response.getAnswers().getFirst();
         } catch (Exception e) {
             System.out.println("Failed to send request: " + e.getMessage());
