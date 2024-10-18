@@ -120,7 +120,7 @@ public class DNSMessageParser {
         }
         if (!nameBackup.contains(domainName.toString())) {
             nameBackup.add(domainName.toString());
-            System.out.println("Cached domain at position 16: " + domainNameCache.get(16));
+            System.out.println("position when adding to cache: " + position + " " + "domain name: " + domainName);
             domainNameCache.putIfAbsent(position, domainName.toString());
         }
         System.out.println("Final domain: " + domainName.toString());
