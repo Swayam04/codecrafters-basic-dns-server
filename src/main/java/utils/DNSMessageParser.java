@@ -86,12 +86,12 @@ public class DNSMessageParser {
             int length = byteBuffer.get() & 0xFF;
             if ((length & 0xC0) == 0xC0) {
                 int pointerOffset = ((length & 0x3F) << 8) | (byteBuffer.get() & 0xFF);
+                System.out.println(pointerOffset);
                 String cachedDomain = domainNameCache.get(pointerOffset);
                 if (cachedDomain != null) {
                     domainName.append(".");
                     domainName.append(cachedDomain);
                 }
-                System.out.println(domainName);
                 isPointer = true;
                 break;
             } else if (length == 0) {
@@ -104,11 +104,11 @@ public class DNSMessageParser {
                     domainName.append(".");
                 }
                 domainName.append(new String(labelBytes, StandardCharsets.UTF_8));
-                System.out.println(domainName);
             }
         }
         if (!isPointer) {
             domainNameCache.putIfAbsent(position, domainName.toString());
+            System.out.println(domainNameCache);
         }
         return domainName.toString();
     }
