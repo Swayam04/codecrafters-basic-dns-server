@@ -22,4 +22,13 @@ public enum DNSType {
     public short getValue() {
         return (short) value;
     }
+
+    public static DNSType fromValue(int value) {
+        for (DNSType type : DNSType.values()) {
+            if (type.getValue() == value) {
+                return type;
+            }
+        }
+        return DNSType.A;
+    }
 }

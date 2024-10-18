@@ -11,11 +11,11 @@ public class DNSRecord {
     private final String domainName;
     private final DNSType dnsType;
     private final DNSClass dnsClass;
-    private final int ttl;
-    private final short rdLength;
+    private final long ttl;
+    private final int rdLength;
     private final String rData;
 
-    public DNSRecord(String domainName, DNSType dnsType, DNSClass dnsClass, int ttl, short rdLength, String rData) {
+    public DNSRecord(String domainName, DNSType dnsType, DNSClass dnsClass, long ttl, int rdLength, String rData) {
         this.domainName = domainName;
         this.dnsType = dnsType;
         this.dnsClass = dnsClass;
@@ -32,11 +32,11 @@ public class DNSRecord {
         return rData;
     }
 
-    public short getRdLength() {
+    public int getRdLength() {
         return rdLength;
     }
 
-    public int getTtl() {
+    public long getTtl() {
         return ttl;
     }
 
@@ -59,8 +59,8 @@ public class DNSRecord {
             byteArrayOutputStream.write(ByteBuffer.allocate(10)
                     .putShort(dnsType.getValue())
                     .putShort(dnsClass.getValue())
-                    .putInt(ttl)
-                    .putShort(rdLength)
+                    .putInt((int) ttl)
+                    .putShort((short) rdLength)
                     .array());
 
             for(String ipLabel : rData.split("\\.")) {

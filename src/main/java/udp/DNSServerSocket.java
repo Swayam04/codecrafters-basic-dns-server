@@ -12,12 +12,10 @@ import java.net.DatagramSocket;
 
 public class DNSServerSocket {
 
-    final int PORT;
-    final int ID;
+    private final int PORT;
 
-    public DNSServerSocket(int port, int ID) {
+    public DNSServerSocket(int port) {
         PORT = port;
-        this.ID = ID;
     }
 
     public void serve() {
@@ -27,12 +25,14 @@ public class DNSServerSocket {
                 final DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 socket.receive(packet);
 
-                DNSMessage request = DNSMessageParser.parseMessage(buf);
+                DNSMessageParser packetParser = new DNSMessageParser(buf);
+                DNSMessage request = packetParser.parseMessage();
                 DNSHeader responseHeader = getResponseHeader(request);
 
                 DNSMessage response = new DNSMessage(responseHeader);
-                response.addQuestion(new DNSQuestion("codecrafters.io", DNSType.A, DNSClass.IN));
-                response.addAnswer(new DNSRecord("codecrafters.io", DNSType.A, DNSClass.IN, 60, (short) 4, "8.8.8.8"));
+                String domainName = request.getQuestions().getFirst().getDomainName();
+                response.addQuestion(new DNSQuestion(domainName, DNSType.A, DNSClass.IN));
+                response.addAnswer(new DNSRecord(domainName, DNSType.A, DNSClass.IN, 60, (short) 4, "8.8.8.8"));
                 final byte[] bufResponse = response.getMessage();
 
                 final DatagramPacket packetResponse = new DatagramPacket(bufResponse, bufResponse.length, packet.getSocketAddress());

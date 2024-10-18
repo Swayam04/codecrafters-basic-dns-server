@@ -1,21 +1,35 @@
 package utils;
 
-import dns.DNSMessage;
+import dns.*;
 import dns.header.DNSHeader;
 import dns.header.OPCode;
 import dns.header.RCode;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 public class DNSMessageParser {
+    private final ByteBuffer byteBuffer;
 
-    public static DNSMessage parseMessage(byte[] message) {
-        DNSHeader header = parseHeader(message);
-        return new DNSMessage(header);
+    public DNSMessageParser(byte[] data) {
+        this.byteBuffer = ByteBuffer.wrap(data);
     }
 
-    private static DNSHeader parseHeader(byte[] message) {
-        ByteBuffer byteBuffer = ByteBuffer.wrap(message, 0, 12);
+    public DNSMessage parseMessage() {
+        DNSHeader header = parseHeader();
+        DNSMessage dnsMessage = new DNSMessage(header);
+
+        for(int i = 0; i < header.getQuestionCount(); i++) {
+            dnsMessage.addQuestion(parseQuestion());
+        }
+
+        for(int i = 0; i < header.getAnswerCount(); i++) {
+            dnsMessage.addAnswer(parseRecord());
+        }
+        return dnsMessage;
+    }
+
+    private DNSHeader parseHeader() {
         DNSHeader header = new DNSHeader();
         short id, flags, qdCount, anCount, nsCount, arCount;
         id = byteBuffer.getShort();
@@ -41,32 +55,73 @@ public class DNSMessageParser {
         return header;
     }
 
-    private static boolean parseQR(short flag) {
+    private DNSQuestion parseQuestion() {
+        String domainName = parseDomainName();
+        DNSClass dnsClass = DNSClass.fromValue(byteBuffer.getShort());
+        DNSType dnsType = DNSType.fromValue(byteBuffer.getShort());
+        return new DNSQuestion(domainName, dnsType, dnsClass);
+    }
+
+    private DNSRecord parseRecord() {
+        String domainName = parseDomainName();
+        DNSClass dnsClass = DNSClass.fromValue(byteBuffer.getShort());
+        DNSType dnsType = DNSType.fromValue(byteBuffer.getShort());
+        long timeToLive = byteBuffer.getInt() & 0xFFFFFFFFL;
+        int rdLength = byteBuffer.getShort() & 0xFFFF;
+        String rData = parseARecordData(rdLength);
+
+        return new DNSRecord(domainName, dnsType, dnsClass, timeToLive, rdLength, rData);
+    }
+
+    private String parseARecordData(int rdLength) {
+        return String.format("%d.%d.%d.%d",
+                byteBuffer.get() & 0xFF,
+                byteBuffer.get() & 0xFF,
+                byteBuffer.get() & 0xFF,
+                byteBuffer.get() & 0xFF);
+    }
+
+    private String parseDomainName() {
+        StringBuilder domainName = new StringBuilder();
+        int length;
+        while((length = byteBuffer.get() & 0xFF) > 0) {
+            if(!domainName.isEmpty()) {
+                domainName.append(".");
+            }
+
+            byte[] labelBytes = new byte[length];
+            byteBuffer.get(labelBytes);
+            domainName.append(new String(labelBytes, StandardCharsets.UTF_8));
+        }
+        return domainName.toString();
+    }
+
+    private boolean parseQR(short flag) {
         return (flag & (1 << 15)) != 0;
     }
 
-    private static OPCode parseOPCode(short flag) {
+    private OPCode parseOPCode(short flag) {
         int opCode = (flag & (15 << 11)) >> 11;
         return OPCode.fromValue(opCode);
     }
 
-    private static boolean parseAA(short flag) {
+    private boolean parseAA(short flag) {
         return (flag & (1 << 10)) != 0;
     }
 
-    private static boolean parseTC(short flag) {
+    private boolean parseTC(short flag) {
         return (flag & (1 << 9)) != 0;
     }
 
-    private static boolean parseRD(short flag) {
+    private boolean parseRD(short flag) {
         return (flag & (1 << 8)) != 0;
     }
 
-    private static boolean parseRA(short flag) {
+    private boolean parseRA(short flag) {
         return (flag & (1 << 7)) != 0;
     }
 
-    private static RCode parseRCode(short flag) {
+    private RCode parseRCode(short flag) {
         int rCode = (flag & 15);
         return RCode.fromValue(rCode);
     }

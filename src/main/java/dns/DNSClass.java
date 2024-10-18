@@ -16,4 +16,14 @@ public enum DNSClass {
     public short getValue() {
         return (short) value;
     }
+
+    public static DNSClass fromValue(int value) {
+        return switch (value) {
+            case 2 -> CS;
+            case 3 -> CH;
+            case 4 -> HS;
+            case 255 -> ALL;
+            default -> IN;
+        };
+    }
 }
