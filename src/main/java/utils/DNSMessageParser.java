@@ -8,15 +8,19 @@ import dns.header.RCode;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class DNSMessageParser {
     private final ByteBuffer byteBuffer;
     private final Map<Integer, String> domainNameCache;
+    private final Set<String> nameBackup;
 
     public DNSMessageParser(byte[] data) {
         this.byteBuffer = ByteBuffer.wrap(data);
         this.domainNameCache = new HashMap<>();
+        this.nameBackup = new HashSet<>();
     }
 
     public DNSMessage parseMessage() {
@@ -107,7 +111,8 @@ public class DNSMessageParser {
                 isFirstLabel = false;
             }
         }
-        if (!domainName.isEmpty()) {
+        if (!nameBackup.contains(domainName.toString())) {
+            nameBackup.add(domainName.toString());
             domainNameCache.putIfAbsent(position, domainName.toString());
         }
 
