@@ -60,10 +60,12 @@ public class DNSServerSocket {
     }
 
     private void getQuestionsAndAnswers(DNSMessage request, DNSMessage response) {
+        int count = 0;
         for(DNSQuestion question : request.getQuestions()) {
             response.addQuestion(question);
             if(forwardingAddress != null && !forwardingAddress.isEmpty()) {
-                response.addAnswer(forwardRequestAndGetResponse(question, request.getHeader().getID()));
+                response.addAnswer(forwardRequestAndGetResponse(question, (short) (request.getHeader().getID() + count)));
+                count++;
             } else {
                 response.addAnswer(new DNSRecord(question.getDomainName(), DNSType.A, DNSClass.IN, 256, 4, "8.8.8.8"));
             }
@@ -87,8 +89,6 @@ public class DNSServerSocket {
         int port = Integer.parseInt(addressParts[1]);
 
         try (DatagramSocket socket = new DatagramSocket()) {
-            socket.setSoTimeout(50000);
-
             InetAddress address = InetAddress.getByName(host);
             DatagramPacket requestPacket = new DatagramPacket(request, request.length, address, port);
             socket.send(requestPacket);

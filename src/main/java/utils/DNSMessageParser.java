@@ -73,7 +73,7 @@ public class DNSMessageParser {
         DNSType dnsType = DNSType.fromValue(byteBuffer.getShort());
         long timeToLive = byteBuffer.getInt() & 0xFFFFFFFFL;
         int rdLength = byteBuffer.getShort() & 0xFFFF;
-        String rData = parseARecordData(rdLength);
+        String rData = parseARecordData();
 
         return new DNSRecord(domainName, dnsType, dnsClass, timeToLive, rdLength, rData);
     }
@@ -110,7 +110,7 @@ public class DNSMessageParser {
         return domainName.toString();
     }
 
-    private String parseARecordData(int rdLength) {
+    private String parseARecordData() {
         return String.format("%d.%d.%d.%d",
                 byteBuffer.get() & 0xFF,
                 byteBuffer.get() & 0xFF,
