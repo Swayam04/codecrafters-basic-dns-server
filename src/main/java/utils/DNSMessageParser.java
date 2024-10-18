@@ -7,12 +7,16 @@ import dns.header.RCode;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DNSMessageParser {
     private final ByteBuffer byteBuffer;
+    private final Map<Integer, String> domainNameCache;
 
     public DNSMessageParser(byte[] data) {
         this.byteBuffer = ByteBuffer.wrap(data);
+        this.domainNameCache = new HashMap<>();
     }
 
     public DNSMessage parseMessage() {
@@ -62,6 +66,7 @@ public class DNSMessageParser {
         return new DNSQuestion(domainName, dnsType, dnsClass);
     }
 
+
     private DNSRecord parseRecord() {
         String domainName = parseDomainName();
         DNSClass dnsClass = DNSClass.fromValue(byteBuffer.getShort());
@@ -73,27 +78,44 @@ public class DNSMessageParser {
         return new DNSRecord(domainName, dnsType, dnsClass, timeToLive, rdLength, rData);
     }
 
+    private String parseDomainName() {
+        StringBuilder domainName = new StringBuilder();
+        int position = byteBuffer.position();
+        boolean isPointer = false;
+        while (true) {
+            int length = byteBuffer.get() & 0xFF;
+            if ((length & 0xC0) == 0xC0) {
+                int pointerOffset = ((length & 0x3F) << 8) | (byteBuffer.get() & 0xFF);
+                String cachedDomain = domainNameCache.get(pointerOffset);
+                if (cachedDomain != null) {
+                    domainName.append(cachedDomain);
+                }
+                isPointer = true;
+                break;
+            } else if (length == 0) {
+                break;
+            } else {
+                byte[] labelBytes = new byte[length];
+                byteBuffer.get(labelBytes);
+
+                if (!domainName.isEmpty()) {
+                    domainName.append(".");
+                }
+                domainName.append(new String(labelBytes, StandardCharsets.UTF_8));
+            }
+        }
+        if (!isPointer) {
+            domainNameCache.put(position, domainName.toString());
+        }
+        return domainName.toString();
+    }
+
     private String parseARecordData(int rdLength) {
         return String.format("%d.%d.%d.%d",
                 byteBuffer.get() & 0xFF,
                 byteBuffer.get() & 0xFF,
                 byteBuffer.get() & 0xFF,
                 byteBuffer.get() & 0xFF);
-    }
-
-    private String parseDomainName() {
-        StringBuilder domainName = new StringBuilder();
-        int length;
-        while((length = byteBuffer.get() & 0xFF) > 0) {
-            if(!domainName.isEmpty()) {
-                domainName.append(".");
-            }
-
-            byte[] labelBytes = new byte[length];
-            byteBuffer.get(labelBytes);
-            domainName.append(new String(labelBytes, StandardCharsets.UTF_8));
-        }
-        return domainName.toString();
     }
 
     private boolean parseQR(short flag) {

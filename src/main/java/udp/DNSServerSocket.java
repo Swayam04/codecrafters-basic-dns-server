@@ -30,9 +30,8 @@ public class DNSServerSocket {
                 DNSHeader responseHeader = getResponseHeader(request);
 
                 DNSMessage response = new DNSMessage(responseHeader);
-                String domainName = request.getQuestions().getFirst().getDomainName();
-                response.addQuestion(new DNSQuestion(domainName, DNSType.A, DNSClass.IN));
-                response.addAnswer(new DNSRecord(domainName, DNSType.A, DNSClass.IN, 60, (short) 4, "8.8.8.8"));
+                getQuestionsAndAnswers(request, response);
+
                 final byte[] bufResponse = response.getMessage();
 
                 final DatagramPacket packetResponse = new DatagramPacket(bufResponse, bufResponse.length, packet.getSocketAddress());
@@ -52,8 +51,15 @@ public class DNSServerSocket {
         responseHeader.setOpCode(requestHeader.getOpCode());
         responseHeader.setRD(requestHeader.isRD());
         responseHeader.setRCode(requestHeader.getOpCode() == OPCode.STANDARD_QUERY ? RCode.NO_ERROR : RCode.NOT_IMPLEMENTED);
-        responseHeader.setQuestionCount((short) 1);
-        responseHeader.setAnswerCount((short) 1);
+        responseHeader.setQuestionCount(requestHeader.getQuestionCount());
+        responseHeader.setAnswerCount(requestHeader.getQuestionCount());
         return responseHeader;
+    }
+
+    private static void getQuestionsAndAnswers(DNSMessage request, DNSMessage response) {
+        for(DNSQuestion question : request.getQuestions()) {
+            response.addQuestion(question);
+            response.addAnswer(new DNSRecord(question.getDomainName(), DNSType.A, DNSClass.IN, 256, 4, "8.8.8.8"));
+        }
     }
 }
